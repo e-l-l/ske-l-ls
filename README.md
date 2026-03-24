@@ -13,7 +13,7 @@ Fetches unresolved inline review comments from the current branch's PR and spawn
 **Install:**
 
 ```sh
-npx @anthropic-ai/claude-code skills install github.com/e-l-l/ske-l-ls/skills/fix-pr-comments
+npx skills add e-l-l/ske-l-ls -s fix-pr-comments
 ```
 
 **Usage:**
@@ -27,5 +27,5 @@ Run from any branch that has an open pull request with unresolved review comment
 ## Install all skills
 
 ```sh
-npx @anthropic-ai/claude-code skills install github.com/e-l-l/ske-l-ls
+npx skills add e-l-l/ske-l-ls
 ```
