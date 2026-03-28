@@ -1,12 +1,12 @@
 ---
 name: fix-pr-comments
-description: Fetch unresolved inline PR review comments and spawn parallel subagents to address each file's comments. Use when the user wants to fix, address, or resolve PR review feedback automatically.
+description: Fetch unresolved inline PR review comments and address them directly. Use when the user wants to fix, address, or resolve PR review feedback automatically.
 disable-model-invocation: true
 ---
 
 # Fix PR Comments
 
-Automatically address unresolved inline review comments on the current branch's pull request by spawning parallel subagents — one per file.
+Automatically address unresolved inline review comments on the current branch's pull request.
 
 ## Unresolved PR Comments
 
@@ -26,32 +26,16 @@ Parse the JSON above. It contains unresolved inline review comments grouped by t
 
 ### Step 2 — Group comments by file
 
-Group the comment threads by their `path` field. Each unique file path becomes one unit of work for a subagent.
+Group the comment threads by their `path` field.
 
 Build a mapping:
 ```
 file_path → [{ line, comments: [{ author, body }] }, ...]
 ```
 
-### Step 3 — Spawn subagents (max 5 in parallel)
+### Step 3 — Address comments
 
-For each file, spawn one subagent using the Agent tool. If there are more than 5 files, process in batches of 5 — wait for each batch to complete before starting the next.
-
-For each subagent, use these parameters:
-- `subagent_type`: `"general-purpose"`
-- `isolation`: `"worktree"`
-- `description`: Short label like `"Fix comments in auth.ts"`
-
-The subagent prompt MUST include:
-1. The full file path
-2. Every comment thread for that file, with line numbers and comment text
-3. The instructions below (copy verbatim into each prompt):
-
----
-
-**Subagent instructions (include in each prompt):**
-
-You are fixing PR review comments on a specific file. For each comment thread provided:
+Process each file's comments. For each comment thread:
 
 1. **Read the file** at the given path to understand the current code.
 2. **Classify the comment** as one of:
@@ -61,7 +45,7 @@ You are fixing PR review comments on a specific file. For each comment thread pr
 4. **For non-actionable comments**: Skip and note the reason.
 5. **If you cannot determine what change is needed**: Do not guess. Mark as unresolved with an explanation.
 
-**Return a structured summary in exactly this format:**
+Track results per file in this structure:
 
 ```
 FILE: <file_path>
@@ -78,18 +62,9 @@ UNRESOLVED:
 
 If a category is empty, omit it.
 
----
+### Step 4 — Present summary
 
-### Step 4 — Merge worktree changes
-
-After each batch of subagents completes, collect the results. For each subagent that made changes (indicated by a returned worktree path/branch):
-
-1. Merge the worktree branch into the current branch: `git merge <branch> --no-edit`
-2. If a merge conflict occurs, do NOT auto-resolve. Instead, abort the merge (`git merge --abort`) and flag the conflict in the summary — the user will resolve it manually.
-
-### Step 5 — Present summary
-
-After all batches are done, compile a summary from all subagent reports. Present it to the user in this format:
+After all comments are processed, present the results:
 
 ```
 ## PR Comments Addressed
@@ -106,13 +81,4 @@ After all batches are done, compile a summary from all subagent reports. Present
 
 ---
 Total: <X> fixed, <Y> skipped, <Z> unresolved across <N> files
-```
-
-If there were merge conflicts, add a section:
-
-```
-### Merge Conflicts
-The following worktree branches could not be auto-merged:
-- <branch>: conflicts in <file>
-Run `git merge <branch>` to resolve manually.
 ```
