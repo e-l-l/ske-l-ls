@@ -10,16 +10,22 @@ Fetches unresolved inline review comments from the current branch's PR and spawn
 
 **Requires:** [`gh`](https://cli.github.com/) (authenticated) and `jq`.
 
-## Install
+**Install:**
 
 ```sh
-npx @anthropic-ai/claude-code skills install github.com/e-l-l/ske-l-ls
+npx skills add e-l-l/ske-l-ls -s fix-pr-comments
 ```
 
-## Usage
+**Usage:**
 
 ```
 /fix-pr-comments
 ```
 
 Run from any branch that has an open pull request with unresolved review comments.
+
+## Install all skills
+
+```sh
+npx skills add e-l-l/ske-l-ls
+```
