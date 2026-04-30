@@ -23,15 +23,7 @@ Parse the JSON above.
 - **If `uncommitted_changes` is non-empty** — stop and ask the user whether to commit them first or proceed without them. Don't silently include or exclude work.
 - **If `commits` is empty** — stop and tell the user there's nothing to PR.
 
-### Step 2 — Push the branch if needed
-
-- If `remote_branch_exists` is false: `git push -u origin <current_branch>`.
-- If `remote_branch_exists` is true and `branch_up_to_date_with_remote` is false: `git push origin <current_branch>` (do **not** force-push without explicit user permission; if the push is rejected as non-fast-forward, stop and ask).
-- Otherwise skip.
-
-On network failure, retry up to 4 times with exponential backoff (2s, 4s, 8s, 16s).
-
-### Step 3 — Draft the title
+### Step 2 — Draft the title
 
 Read the `commits`, `files_changed`, `diff_stat`, and `diff` to understand the change. Then write a title that follows these rules:
 
@@ -51,7 +43,7 @@ Read the `commits`, `files_changed`, `diff_stat`, and `diff` to understand the c
 - Look at `recent_pr_examples`. If they use Conventional Commits prefixes (`feat:`, `fix:`, `refactor:`, `docs:`, `chore:`), use the same prefix. If they don't, don't add one.
 - Mirror their capitalization and punctuation conventions.
 
-### Step 4 — Draft the description
+### Step 3 — Draft the description
 
 Use this structure. Drop sections that don't apply — empty headers are noise.
 
@@ -89,27 +81,26 @@ left out, screenshots for UI changes, links to the issue/RFC.>
 - **Match the repo's tone.** Skim `recent_pr_examples` for length and formality. A repo whose merged PRs are 2-line bodies doesn't need a 5-section essay.
 - **Linked issues**: if the user mentioned an issue or one appears in commit messages, add `Closes #N` / `Fixes #N` in the Notes section.
 
-### Step 5 — Confirm before creating
+### Step 4 — Confirm before creating
 
 Show the user the drafted title and body and the base branch, and ask whether to proceed, edit, or cancel. PRs are visible to collaborators — don't create one without confirmation unless the user already said "just do it".
 
-### Step 6 — Create the PR
+### Step 5 — Push and create
 
-Once confirmed, create it with `gh pr create`. Pass the body via a heredoc so multi-line markdown survives intact:
+Once confirmed, run the create script. It pushes the branch first (with retry on network failure, refusing to force-push if the remote has diverged), then runs `gh pr create`. Pipe the body via stdin so multi-line markdown survives intact.
 
 ```sh
-gh pr create \
-  --base "<base_branch>" \
-  --head "<current_branch>" \
+${CLAUDE_SKILL_DIR}/scripts/create-pr.sh \
   --title "<title>" \
-  --body "$(cat <<'EOF'
+  --base "<base_branch>" <<'EOF'
 <body>
 EOF
-)"
 ```
 
-If the user asked for a draft PR, add `--draft`.
+Add `--draft` if the user asked for a draft PR. The script prints the PR URL on success.
 
-### Step 7 — Report back
+If the script exits non-zero, surface its stderr to the user — common causes are a divergent remote branch (needs manual resolution), an already-open PR for this branch, or push auth failure.
 
-Print the PR URL returned by `gh pr create`. Offer to subscribe to PR activity (CI, reviews) if the user wants.
+### Step 6 — Report back
+
+Print the PR URL the script returned. Offer to subscribe to PR activity (CI, reviews) if the user wants.
