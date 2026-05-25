@@ -87,7 +87,7 @@ Show the user the drafted title and body and the base branch, and ask whether to
 
 ### Step 5 — Push and create
 
-Once confirmed, run the create script. It pushes the branch first (with retry on network failure, refusing to force-push if the remote has diverged), then runs `gh pr create`. Pipe the body via stdin so multi-line markdown survives intact.
+Once confirmed, run the create script. It pushes the branch first (with retry on network failure, refusing to force-push if the remote has diverged), then runs `gh pr create` with `--assignee @me` so the PR is assigned to the authenticated GitHub user. Pipe the body via stdin so multi-line markdown survives intact.
 
 ```sh
 ${CLAUDE_SKILL_DIR}/scripts/create-pr.sh \
