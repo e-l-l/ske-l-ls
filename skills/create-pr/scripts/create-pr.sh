@@ -115,6 +115,7 @@ PR_URL=$(gh pr create \
   --head "$HEAD" \
   --title "$TITLE" \
   --body-file "$BODY_FILE" \
+  --assignee "@me" \
   $DRAFT)
 
 echo "$PR_URL"
