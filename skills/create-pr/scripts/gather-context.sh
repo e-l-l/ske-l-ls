@@ -125,9 +125,9 @@ DIFF_STAT=$(git diff --stat "$MERGE_BASE..HEAD")
 MAX_DIFF_BYTES=80000
 FULL_DIFF=$(git diff "$MERGE_BASE..HEAD")
 DIFF_TRUNCATED=false
-DIFF_BYTES=$(printf '%s' "$FULL_DIFF" | wc -c | tr -d ' ')
+DIFF_BYTES=${#FULL_DIFF}
 if [ "$DIFF_BYTES" -gt "$MAX_DIFF_BYTES" ]; then
-  DIFF=$(printf '%s' "$FULL_DIFF" | head -c "$MAX_DIFF_BYTES")
+  DIFF=${FULL_DIFF:0:$MAX_DIFF_BYTES}
   DIFF_TRUNCATED=true
 else
   DIFF="$FULL_DIFF"
